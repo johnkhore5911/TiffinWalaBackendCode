@@ -272,7 +272,9 @@ const generateQRCode = async (req, res) => {
       }
 
       // Static URL for QR Code scanning (you can change this to any valid URL)
-      const qrData = 'http://192.168.18.235:4000/api/qrCodeRoutes/scan-qr';
+      // const qrData = 'http://192.168.18.235:4000/api/qrCodeRoutes/scan-qr';
+      const qrData = 'https://tiffin-wala-backend.vercel.app/api/qrCodeRoutes/scan-qr';
+      
 
       // Check if QR Code already exists in the database
       let qrCode = await QRCodeModel.findOne({ code: qrData }); // You can also check by validDate if needed
