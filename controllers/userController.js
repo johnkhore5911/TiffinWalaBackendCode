@@ -799,4 +799,63 @@ const getDeliveryDetails = async (req, res) => {
     }
   };
 
-module.exports = { getDeliveryDetails,closeTiffinModal,getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits };
+
+
+const MealOptOut = require('../models/MealOptOut');
+
+const optOutMeal = async (req, res) => {
+    try {
+        const customerId = req.user.id;
+        const { date } = req.body;  // Get customer ID, date, and reason from request
+
+        // Check if the customer has already opted out for this day
+        const existingOptOut = await MealOptOut.findOne({ customer: customerId, date: date });
+
+        if (existingOptOut) {
+            return res.status(400).json({ message: 'Already opted out for this meal' });
+        }
+
+        const optOutRecord = new MealOptOut({ customer: customerId, date });
+        await optOutRecord.save();
+
+        return res.status(200).json({ message: 'Successfully opted out of meal for today' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+
+const getOptOutReports = async (req, res) => {
+    try {
+        const optOuts = await MealOptOut.find()
+            .populate('customer', 'name email contact')  // Populate customer details
+            .sort({ date: -1 });  // Sort by most recent opt-outs
+
+        if (optOuts.length === 0) {
+            return res.status(404).json({ message: 'No opt-outs found' });
+        }
+
+        return res.status(200).json(optOuts);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+const deleteOptOutById = async (req, res) => {
+    try {
+        const { id } = req.body;  // Get opt-out record ID from the request params
+        const optOutRecord = await MealOptOut.findByIdAndDelete(id);
+        if (!optOutRecord) {
+            return res.status(404).json({ message: 'Opt-out record not found' });
+        }
+        return res.status(200).json({ message: 'Opt-out record deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+module.exports = { optOutMeal,getOptOutReports,deleteOptOutById,getDeliveryDetails,closeTiffinModal,getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits };

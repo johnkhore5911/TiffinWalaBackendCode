@@ -1,6 +1,7 @@
 const express = require("express")
 const router = express.Router()
 const {
+  optOutMeal,getOptOutReports,deleteOptOutById,
   closeTiffinModal,
   getDeliveryDetails,
   getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits
@@ -19,6 +20,11 @@ router.post("/updateDeliveryStatus",auth,isCustomer,updateDeliveryStatus)
 router.post("/refundCredits",auth,isAdmin,refundCredits)
 router.post("/closeTiffinModal",auth,isCustomer,closeTiffinModal)
 router.post("/getDeliveryDetails",auth,isCustomer,getDeliveryDetails)
+
+router.post("/optOutMeal",auth,isCustomer,optOutMeal)
+router.get("/getOptOutReports",auth,isAdmin,getOptOutReports)
+router.post("/deleteOptOutById",auth,isAdmin,deleteOptOutById)
+
 
 
 module.exports = router
