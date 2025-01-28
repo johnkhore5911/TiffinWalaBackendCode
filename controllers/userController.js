@@ -555,12 +555,6 @@ const updateDeliveryStatus = async (req, res) => {
         delivery.status = status;
         await delivery.save();  // Make sure to await the save operation here
 
-        if (!updatedUser) {
-            return res.status(500).json({
-                success: false,
-                message: 'Error while updating showTiffinModal',
-            });
-        }
 
         // Send a successful response
         res.status(200).json({
