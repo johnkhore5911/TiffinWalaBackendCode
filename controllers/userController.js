@@ -779,5 +779,30 @@ const closeTiffinModal = async (req, res) => {
 };
 
 
+const getDeliveryDetails = async (req, res) => {
+    const { deliveryId } = req.body; // Get delivery ID from request parameters
+  
+    try {
+      // Fetch the delivery details along with delivery person details
+      const delivery = await Delivery.findById(deliveryId)
+        .populate('deliveryPerson', 'name') // Populate deliveryPerson field to fetch their name
+        .exec();
+  
+      if (!delivery) {
+        return res.status(404).json({ message: 'Delivery not found' });
+      }
+  
+      // Prepare the response data
+      const response = {
+        deliveryPersonName: delivery.deliveryPerson ? delivery.deliveryPerson.name : 'Not Assigned',
+        timeOfDelivery: delivery.date || 'NAN',
+      };
+  
+      res.status(200).json(response);
+    } catch (error) {
+      console.error('Error fetching delivery details:', error);
+      res.status(500).json({ message: 'Server Error' });
+    }
+  };
 
-module.exports = { closeTiffinModal,getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits };
+module.exports = { getDeliveryDetails,closeTiffinModal,getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits };
