@@ -276,5 +276,9 @@ const sendMealNotification = async (req, res) => {
 
 app.post('/send-meal-notification', sendMealNotification);
 
+app.listen(process.env.PORT, () => {
+  console.log(`Server is started at port ${process.env.PORT} successfully`);
+});
+
 // Export the app for Vercel
 module.exports = app; // <--- Add this to make it work on Vercel
