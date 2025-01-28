@@ -239,6 +239,17 @@ const notifyCustomerTiffin = async (req, res) => {
         // Send notification via FCM
         await admin.messaging().send(message);
 
+        const user = await User.findById(credit.user);
+        if(!user){
+            return res.status(400).json({
+                success: false,
+                message: 'User not found!',
+            });
+        }
+        user.showTiffinModal=true;
+        await user.save();
+
+
         // Respond back with success
         res.status(200).json({
             success: true,

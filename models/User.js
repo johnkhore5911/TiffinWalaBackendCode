@@ -76,6 +76,10 @@ const UserSchema = new mongoose.Schema({
             return (this.role === 'customer'|| this.role==='delivery');  // Only required for 'customer' role
         },
     },
+    showTiffinModal:{
+        type:Boolean,
+        default:false
+    },
     createdAt: {
         type: Date,
         default: Date.now,

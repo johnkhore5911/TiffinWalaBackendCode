@@ -1,6 +1,7 @@
 const express = require("express")
 const router = express.Router()
 const {
+  closeTiffinModal,
   getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits
 } = require("../controllers/userController")
 
@@ -15,6 +16,7 @@ router.get("/getTiffinSystemCustomers",auth,isAdmin,getTiffinSystemCustomers)
 router.get("/getDeliveryUsers",auth,isAdmin,getDeliveryUsers)
 router.post("/updateDeliveryStatus",auth,isCustomer,updateDeliveryStatus)
 router.post("/refundCredits",auth,isAdmin,refundCredits)
+router.post("/closeTiffinModal",auth,isCustomer,closeTiffinModal)
 
 
 module.exports = router
