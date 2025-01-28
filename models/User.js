@@ -76,9 +76,13 @@ const UserSchema = new mongoose.Schema({
             return (this.role === 'customer'|| this.role==='delivery');  // Only required for 'customer' role
         },
     },
-    showTiffinModal:{
-        type:Boolean,
-        default:false
+    // showTiffinModal:{
+    //     type:Boolean,
+    //     default:false
+    // },
+    showTiffinModal: {
+        type: [String],  // Array of strings to store the delivery IDs
+        default: [],     // Default is an empty array, meaning no deliveries are pending
     },
     createdAt: {
         type: Date,

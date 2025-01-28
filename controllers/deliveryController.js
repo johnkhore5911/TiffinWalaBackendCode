@@ -246,7 +246,10 @@ const notifyCustomerTiffin = async (req, res) => {
                 message: 'User not found!',
             });
         }
-        user.showTiffinModal=true;
+        // user.showTiffinModal=true;
+        
+        // Push the delivery ID into the showTiffinModal array
+        user.showTiffinModal.push(delivery._id.toString());
         await user.save();
 
 

@@ -555,25 +555,6 @@ const updateDeliveryStatus = async (req, res) => {
         delivery.status = status;
         await delivery.save();  // Make sure to await the save operation here
 
-        // Find the user associated with the delivery
-        const user = await User.findById(delivery.deliveryPerson);
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found',
-            });
-        }
-
-     
-
-        const updatedUser = await User.findOneAndUpdate(
-            { _id: user._id },
-            { showTiffinModal: false },
-            { new: true }
-        ).catch(err => console.error('Error during update:', err));
-        
-
         if (!updatedUser) {
             return res.status(500).json({
                 success: false,
@@ -718,10 +699,52 @@ const refundCredits = async(req,res)=>{
 }
 
 
+// const closeTiffinModal = async (req, res) => {
+//     try {
+//         const userId = req.user.id;  // Assuming userId is available in the request object
+//         const deliveryId= req.body;
+//         console.log("USERId: ", userId);
+//         console.log("deliveryId: ", deliveryId);
+
+//         // Find the user by their ID
+//         const user = await User.findById(userId);
+        
+//         // Check if the user exists
+//         if (!user) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'User not found',
+//             });
+//         }
+
+//         // Update the showTiffinModal field to false
+//         user.showTiffinModal = false;
+        
+//         // Save the updated user document
+//         await user.save();
+
+//         // Send a successful response
+//         return res.status(200).json({
+//             success: true,
+//             message: 'Tiffin modal closed successfully!',
+//         });
+
+//     } catch (error) {
+//         console.error('Error occurred while updating closeTiffinModal:', error);
+//         return res.status(500).json({
+//             success: false,
+//             message: 'Error occurred while updating the closeTiffinModal',
+//         });
+//     }
+// };
+
+
 const closeTiffinModal = async (req, res) => {
     try {
         const userId = req.user.id;  // Assuming userId is available in the request object
+        const { deliveryId } = req.body;  // Extract deliveryId from request body
         console.log("USERId: ", userId);
+        console.log("deliveryId: ", deliveryId);
 
         // Find the user by their ID
         const user = await User.findById(userId);
@@ -734,8 +757,8 @@ const closeTiffinModal = async (req, res) => {
             });
         }
 
-        // Update the showTiffinModal field to false
-        user.showTiffinModal = false;
+        // Remove the deliveryId from the showTiffinModal array
+        user.showTiffinModal = user.showTiffinModal.filter(id => id !== deliveryId);
         
         // Save the updated user document
         await user.save();
