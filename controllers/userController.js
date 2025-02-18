@@ -858,4 +858,69 @@ const deleteOptOutById = async (req, res) => {
 };
 
 
-module.exports = { optOutMeal,getOptOutReports,deleteOptOutById,getDeliveryDetails,closeTiffinModal,getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits };
+const getDashboardData = async (req, res) => {
+    try {
+      // Get all customers
+      const customers = await User.find({ role: "customer" }).select("_id name contact address fcmToken");
+      const customerIds = customers.map(user => user._id);
+  
+      // Filter customers who have a valid meal plan
+      const activeCredits = await Credit.find({
+        user: { $in: customerIds },
+        mealPlan: { $ne: null },
+      }).select("user mealPlan mealPlanExpiryDate");
+      const activeCustomerIds = activeCredits.map(credit => credit.user.toString());
+  
+      // Count total customers with a meal plan
+      const totalCustomers = activeCustomerIds.length;
+  
+      // Count customers in QR and Tiffin System plans
+      const qrPlanCount = await Credit.countDocuments({
+        user: { $in: activeCustomerIds },
+        mealPlan: await MealPlan.findOne({ name: "QR" }).select("_id"),
+      });
+  
+      const tiffinPlanCount = await Credit.countDocuments({
+        user: { $in: activeCustomerIds },
+        mealPlan: await MealPlan.findOne({ name: "Tiffin System" }).select("_id"),
+      });
+  
+      // Get all delivery partners
+      const deliveryPartners = await User.find({ role: "delivery" }).select("name address");
+  
+      // Get plan purchased users sorted by expiry date (ascending order)
+      const planUsers = await Credit.find({
+        user: { $in: activeCustomerIds },
+      })
+        .populate("user", "name contact fcmToken")
+        .populate("mealPlan", "name")
+        .sort({ mealPlanExpiryDate: 1 }) // Sorting by nearest expiry
+        .select("user mealPlan mealPlanExpiryDate createdAt");
+  
+      const PlanPurchasedUser = planUsers.map(credit => ({
+        name: credit.user.name,
+        contact: credit.user.contact,
+        Plan: credit.mealPlan.name,
+        Date: credit.createdAt.toISOString().split("T")[0],
+        Expiry: credit.mealPlanExpiryDate.toISOString().split("T")[0],
+        fcmtoken: credit.user.fcmToken,
+      }));
+  
+      res.status(200).json({
+        totalCustomer: totalCustomers,
+        lowerStats:{
+            QR: { totalCustomers: qrPlanCount },
+            TiffinSystem: { totalCustomers: tiffinPlanCount },
+        },
+        DeliveryPartners: deliveryPartners,
+        PlanPurchasedUser,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  };
+  
+
+
+module.exports = { getDashboardData,optOutMeal,getOptOutReports,deleteOptOutById,getDeliveryDetails,closeTiffinModal,getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits };
