@@ -8,6 +8,7 @@ exports.auth = async (req, res, next) => {
         console.log("Hii")
         //extract token
         const token =  req.header("Authorization").replace("Bearer ", "");
+        console.log("Token: ",token);
         // console.log("Token: ",token);
         // req.cookies.token 
                         // || req.body.token 
@@ -29,6 +30,7 @@ exports.auth = async (req, res, next) => {
             
             console.log(decode);
             req.user = decode;
+            console.log("Verified Successfully!");
         }
         catch(err) {
             //verification - issue
