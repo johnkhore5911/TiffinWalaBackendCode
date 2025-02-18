@@ -1,6 +1,7 @@
 const express = require("express")
 const router = express.Router()
 const {
+  getDashboardData,
   optOutMeal,getOptOutReports,deleteOptOutById,
   closeTiffinModal,
   getDeliveryDetails,
@@ -24,7 +25,7 @@ router.post("/getDeliveryDetails",auth,isCustomer,getDeliveryDetails)
 router.post("/optOutMeal",auth,isCustomer,optOutMeal)
 router.get("/getOptOutReports",auth,isAdmin,getOptOutReports)
 router.post("/deleteOptOutById",auth,isAdmin,deleteOptOutById)
-
+router.get("/DashboardController",auth,isAdmin,getDashboardData)
 
 
 module.exports = router

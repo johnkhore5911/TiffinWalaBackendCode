@@ -276,6 +276,56 @@ const sendMealNotification = async (req, res) => {
 
 app.post('/send-meal-notification', sendMealNotification);
 
+
+
+
+const sendNotificationToUser = async (req, res) => {
+  console.log("Send Notification to User");
+  const { fcmToken, message } = req.body;
+  console.log("FCM Token:", fcmToken);
+  console.log("Message:", message);
+
+  try {
+    if (!fcmToken || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "FCM token and message are required",
+      });
+    }
+
+    const payload = {
+      notification: {
+        title: 'Meal Notification',
+        body: message,
+      },
+    };
+
+    // Send the message to the specific user using their FCM token
+    const response = await admin.messaging().send({
+      token: fcmToken,
+      notification: payload.notification,
+    });
+
+    console.log('Successfully sent message:', response);
+
+    return res.status(200).json({
+      success: true,
+      message: "Notification sent successfully!",
+    });
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Error sending notification",
+    });
+  }
+
+};
+
+app.post('/send-notification-to-user', sendNotificationToUser);
+
+
+
 app.listen(process.env.PORT, () => {
   console.log(`Server is started at port ${process.env.PORT} successfully`);
 });

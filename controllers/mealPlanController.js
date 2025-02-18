@@ -5,6 +5,7 @@ const MealPlan = require("../models/MealPlan")
 
 const mealPlan = async (req,res) => {
     const { name, description, credits, price, validity, planType } = req.body;
+    console.log("req.body:",req.body);
 
     try {
       // Validate incoming data
@@ -21,6 +22,7 @@ const mealPlan = async (req,res) => {
         validity,
         planType,
       });
+      console.log("Saving meal plan:",newMealPlan);
   
       // Save to the database
       await newMealPlan.save();
