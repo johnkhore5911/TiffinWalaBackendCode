@@ -187,6 +187,7 @@ const mealPlanRoutes = require("./routes/mealPlanRoutes");
 const qrCodeRoutes = require("./routes/qrCodeRoutes");
 const userRoutes = require("./routes/userRoutes");
 const deliveryRoutes = require("./routes/deliveryRoutes");
+const paymentRoutes = require("./routes/paymentRoute");
 
 // Use Routes
 app.use("/api/auth", authRoutes);
@@ -194,6 +195,9 @@ app.use("/api/mealPlanRoutes", mealPlanRoutes);
 app.use("/api/qrCodeRoutes", qrCodeRoutes);
 app.use("/api/userRoutes", userRoutes);
 app.use("/api/deliveryRoutes", deliveryRoutes);
+
+//payment
+app.use("/api/payments", paymentRoutes);
 
 // Default route
 app.get("/", (req, res) => {

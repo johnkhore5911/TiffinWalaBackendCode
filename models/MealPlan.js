@@ -1,8 +1,13 @@
 const mongoose = require('mongoose');
 
 const MealPlanSchema = new mongoose.Schema({
-    name: {
+    name:{
         type: String,
+        required: true,
+    },
+    type: {
+        type: String,
+        enum: ['QR','Tiffin System'],
         required: true,
     },
     description: {

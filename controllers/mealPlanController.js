@@ -4,7 +4,7 @@ const bcrpyt = require("bcrypt");
 const MealPlan = require("../models/MealPlan")
 
 const mealPlan = async (req,res) => {
-    const { name, description, credits, price, validity, planType } = req.body;
+    const { name,type, description, credits, price, validity, planType } = req.body;
     console.log("req.body:",req.body);
 
     try {
@@ -16,6 +16,7 @@ const mealPlan = async (req,res) => {
       // Create a new meal plan instance
       const newMealPlan = new MealPlan({
         name,
+        type,
         description,
         credits,
         price,
