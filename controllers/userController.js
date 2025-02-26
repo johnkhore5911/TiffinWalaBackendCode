@@ -22,7 +22,7 @@ const getUserData = async (req, res) => {
 
         // Find the credit details for the user
         const creditDetails = await Credit.findOne({ user: userId })
-            .populate("mealPlan", "name description price") // Populate meal plan details
+            .populate("mealPlan", "name description price credits") // Populate meal plan details
             .populate("user", "name email showTiffinModal"); // Populate user details
 
         // If no credit details are found
@@ -46,6 +46,7 @@ const getUserData = async (req, res) => {
                           name: creditDetails.mealPlan.name,
                           description: creditDetails.mealPlan.description,
                           price: creditDetails.mealPlan.price,
+                          planCredits:creditDetails.mealPlan.credits
                       }
                     : null,
                 credits: {
@@ -195,7 +196,6 @@ const getUserData = async (req, res) => {
 //     }
 // };
 
-
 const updatePlan = async (req, res) => {
     try {
         const userId = req.user?.id;
@@ -224,7 +224,8 @@ const updatePlan = async (req, res) => {
             });
         }
 
-        const creditDetails = await Credit.findOne({ user: userId }).populate("mealPlan", "credits mealPlanValidity");
+        // Fetch current credit details of the user
+        const creditDetails = await Credit.findOne({ user: userId });
         if (!creditDetails) {
             return res.status(404).json({
                 success: false,
@@ -232,6 +233,7 @@ const updatePlan = async (req, res) => {
             });
         }
 
+        // Fetch the new meal plan details
         const newMealPlan = await MealPlan.findById(mealPlanId);
         if (!newMealPlan) {
             return res.status(404).json({
@@ -240,11 +242,12 @@ const updatePlan = async (req, res) => {
             });
         }
 
-        // Update mealPlan and available credits
+        // Update meal plan details
         creditDetails.mealPlan = mealPlanId;
-        creditDetails.availableCredits += newMealPlan.credits;
+        creditDetails.availableCredits = newMealPlan.credits; // Reset available credits to plan credits
+        creditDetails.usedCredits = 0; // Reset used credits to zero
 
-        // Set mealPlanValidity and calculate mealPlanExpiryDate
+        // Set meal plan validity and calculate the expiry date
         creditDetails.mealPlanValidity = newMealPlan.validity;
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + newMealPlan.validity);
@@ -253,10 +256,7 @@ const updatePlan = async (req, res) => {
         // Save the updated credit details
         await creditDetails.save();
 
-        // Log and re-fetch to verify the update
         console.log("Updated Credit Details: ", creditDetails);
-        const updatedCreditDetails = await Credit.findOne({ user: userId }).populate("mealPlan", "credits mealPlanValidity mealPlanExpiryDate");
-        console.log("Re-fetched Credit Details: ", updatedCreditDetails);
 
         return res.status(200).json({
             success: true,
@@ -270,6 +270,82 @@ const updatePlan = async (req, res) => {
         });
     }
 };
+
+
+// const updatePlan = async (req, res) => {
+//     try {
+//         const userId = req.user?.id;
+//         const { mealPlanId } = req.body;
+
+//         console.log("Request Body: ", req.body);
+
+//         if (!userId) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "User ID is required.",
+//             });
+//         }
+
+//         if (!mealPlanId) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Meal Plan ID is required.",
+//             });
+//         }
+
+//         if (!mongoose.Types.ObjectId.isValid(mealPlanId)) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Invalid Meal Plan ID.",
+//             });
+//         }
+
+//         const creditDetails = await Credit.findOne({ user: userId }).populate("mealPlan", "credits mealPlanValidity");
+//         if (!creditDetails) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "No meal credits found for this user.",
+//             });
+//         }
+
+//         const newMealPlan = await MealPlan.findById(mealPlanId);
+//         if (!newMealPlan) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Meal Plan not found.",
+//             });
+//         }
+
+//         // Update mealPlan and available credits
+//         creditDetails.mealPlan = mealPlanId;
+//         creditDetails.availableCredits = newMealPlan.credits;
+
+//         // Set mealPlanValidity and calculate mealPlanExpiryDate
+//         creditDetails.mealPlanValidity = newMealPlan.validity;
+//         const expiryDate = new Date();
+//         expiryDate.setDate(expiryDate.getDate() + newMealPlan.validity);
+//         creditDetails.mealPlanExpiryDate = expiryDate;
+
+//         // Save the updated credit details
+//         await creditDetails.save();
+
+//         // Log and re-fetch to verify the update
+//         console.log("Updated Credit Details: ", creditDetails);
+//         const updatedCreditDetails = await Credit.findOne({ user: userId }).populate("mealPlan", "credits mealPlanValidity mealPlanExpiryDate");
+//         console.log("Re-fetched Credit Details: ", updatedCreditDetails);
+
+//         return res.status(200).json({
+//             success: true,
+//             message: "Meal Plan updated successfully.",
+//         });
+//     } catch (error) {
+//         console.error("Error updating Meal Plan:", error);
+//         return res.status(500).json({
+//             success: false,
+//             message: "An error occurred while updating the Meal Plan. Please try again.",
+//         });
+//     }
+// };
 
 
 
@@ -381,7 +457,7 @@ const getTiffinSystemCustomers = async (req, res) => {
         const credits = await Credit.find({ user: { $in: customerIds } })
             .populate({
                 path: 'mealPlan',
-                match: { name: 'Tiffin System' }  // Only include meal plans with name 'Tiffin System'
+                match: { type: 'Tiffin System' }  // Only include meal plans with name 'Tiffin System'
             });
 
         // Step 3: Filter out customers who don't have 'Tiffin System' meal plan
@@ -432,37 +508,74 @@ const getTiffinSystemCustomers = async (req, res) => {
 // }
 
 
+// const getDeliverUserData = async (req, res) => {
+//     try {
+//         const userId = req.user.id; // Assuming user ID is available in `req.user`
+//         console.log("This is the delivery userId: ", userId);
+
+//         // Find all delivery documents where the deliveryPerson matches the userId
+//         const deliveries = await Delivery.find({ deliveryPerson: userId })
+//             .populate('customer', 'name address fcmToken') // Populate `customer` with `name` and `address`
+//             .select('status collectionStatus date customer'); // Select desired fields from Delivery
+
+//         if (!deliveries.length) {
+//             return res.status(201).json({
+//                 success: true,
+//                 message: "No deliveries found for the specified delivery person",
+//             });
+//         }
+
+//         // Send the response with populated data
+//         res.status(200).json({
+//             success: true,
+//             message: "Successfully fetched delivery data",
+//             deliveries,
+//         });
+//     } catch (error) {
+//         console.error("Error fetching delivery details", error);
+//         res.status(500).json({
+//             success: false,
+//             message: "An error occurred while fetching delivery user details",
+//         });
+//     }
+// };
+
 const getDeliverUserData = async (req, res) => {
     try {
         const userId = req.user.id; // Assuming user ID is available in `req.user`
-        console.log("This is the delivery userId: ", userId);
+        console.log("Fetching deliveries with 'Pending' status for userId:", userId);
 
-        // Find all delivery documents where the deliveryPerson matches the userId
-        const deliveries = await Delivery.find({ deliveryPerson: userId })
-            .populate('customer', 'name address fcmToken') // Populate `customer` with `name` and `address`
-            .select('status collectionStatus date customer'); // Select desired fields from Delivery
+        // Find deliveries where deliveryPerson matches userId and status is "Pending"
+        const pendingDeliveries = await Delivery.find({ 
+                deliveryPerson: userId, 
+                status: { $eq: "Pending" } // Ensures only "Pending" status is fetched
+            })
+            .populate('customer', 'name address fcmToken') // Populate `customer` with relevant fields
+            .select('status collectionStatus date customer'); // Select only required fields
 
-        if (!deliveries.length) {
-            return res.status(201).json({
+        if (!pendingDeliveries.length) {
+            return res.status(200).json({
                 success: true,
-                message: "No deliveries found for the specified delivery person",
+                message: "No pending deliveries found for the specified delivery person",
             });
         }
 
-        // Send the response with populated data
+        // Send response with the filtered data
         res.status(200).json({
             success: true,
-            message: "Successfully fetched delivery data",
-            deliveries,
+            message: "Successfully fetched pending deliveries",
+            deliveries: pendingDeliveries,
         });
     } catch (error) {
-        console.error("Error fetching delivery details", error);
+        console.error("Error fetching pending deliveries:", error);
         res.status(500).json({
             success: false,
-            message: "An error occurred while fetching delivery user details",
+            message: "An error occurred while fetching pending deliveries",
         });
     }
 };
+
+
 
 
 const getDeliveryUsers = async (req, res) => {
@@ -858,69 +971,184 @@ const deleteOptOutById = async (req, res) => {
 };
 
 
+// const getDashboardData = async (req, res) => {
+//     try {
+//       // Get all customers
+//       const customers = await User.find({ role: "customer" }).select("_id name contact address fcmToken");
+//       const customerIds = customers.map(user => user._id);
+  
+//       // Filter customers who have a valid meal plan
+//       const activeCredits = await Credit.find({
+//         user: { $in: customerIds },
+//         mealPlan: { $ne: null },
+//       }).select("user mealPlan mealPlanExpiryDate");
+//       const activeCustomerIds = activeCredits.map(credit => credit.user.toString());
+  
+//       // Count total customers with a meal plan
+//       const totalCustomers = activeCustomerIds.length;
+  
+//       // Count customers in QR and Tiffin System plans
+//       const qrPlanCount = await Credit.countDocuments({
+//         user: { $in: activeCustomerIds },
+//         mealPlan: await MealPlan.findOne({ name: "QR" }).select("_id"),
+//       });
+  
+//       const tiffinPlanCount = await Credit.countDocuments({
+//         user: { $in: activeCustomerIds },
+//         mealPlan: await MealPlan.findOne({ name: "Tiffin System" }).select("_id"),
+//       });
+  
+//       // Get all delivery partners
+//       const deliveryPartners = await User.find({ role: "delivery" }).select("name address");
+  
+//       // Get plan purchased users sorted by expiry date (ascending order)
+//       const planUsers = await Credit.find({
+//         user: { $in: activeCustomerIds },
+//       })
+//         .populate("user", "name contact fcmToken")
+//         .populate("mealPlan", "name")
+//         .sort({ mealPlanExpiryDate: 1 }) // Sorting by nearest expiry
+//         .select("user mealPlan mealPlanExpiryDate createdAt");
+  
+//       const PlanPurchasedUser = planUsers.map(credit => ({
+//         name: credit.user.name,
+//         contact: credit.user.contact,
+//         Plan: credit.mealPlan.name,
+//         Date: credit.createdAt.toISOString().split("T")[0],
+//         Expiry: credit.mealPlanExpiryDate.toISOString().split("T")[0],
+//         fcmtoken: credit.user.fcmToken,
+//       }));
+  
+//       res.status(200).json({
+//         totalCustomer: totalCustomers,
+//         lowerStats:{
+//             QR: { totalCustomers: qrPlanCount },
+//             TiffinSystem: { totalCustomers: tiffinPlanCount },
+//         },
+//         DeliveryPartners: deliveryPartners,
+//         PlanPurchasedUser,
+//       });
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({ message: "Internal Server Error" });
+//     }
+//   };
+  
+
 const getDashboardData = async (req, res) => {
     try {
-      // Get all customers
-      const customers = await User.find({ role: "customer" }).select("_id name contact address fcmToken");
-      const customerIds = customers.map(user => user._id);
-  
-      // Filter customers who have a valid meal plan
-      const activeCredits = await Credit.find({
-        user: { $in: customerIds },
-        mealPlan: { $ne: null },
-      }).select("user mealPlan mealPlanExpiryDate");
-      const activeCustomerIds = activeCredits.map(credit => credit.user.toString());
-  
-      // Count total customers with a meal plan
-      const totalCustomers = activeCustomerIds.length;
-  
-      // Count customers in QR and Tiffin System plans
-      const qrPlanCount = await Credit.countDocuments({
-        user: { $in: activeCustomerIds },
-        mealPlan: await MealPlan.findOne({ name: "QR" }).select("_id"),
-      });
-  
-      const tiffinPlanCount = await Credit.countDocuments({
-        user: { $in: activeCustomerIds },
-        mealPlan: await MealPlan.findOne({ name: "Tiffin System" }).select("_id"),
-      });
-  
-      // Get all delivery partners
-      const deliveryPartners = await User.find({ role: "delivery" }).select("name address");
-  
-      // Get plan purchased users sorted by expiry date (ascending order)
-      const planUsers = await Credit.find({
-        user: { $in: activeCustomerIds },
-      })
-        .populate("user", "name contact fcmToken")
-        .populate("mealPlan", "name")
-        .sort({ mealPlanExpiryDate: 1 }) // Sorting by nearest expiry
-        .select("user mealPlan mealPlanExpiryDate createdAt");
-  
-      const PlanPurchasedUser = planUsers.map(credit => ({
-        name: credit.user.name,
-        contact: credit.user.contact,
-        Plan: credit.mealPlan.name,
-        Date: credit.createdAt.toISOString().split("T")[0],
-        Expiry: credit.mealPlanExpiryDate.toISOString().split("T")[0],
-        fcmtoken: credit.user.fcmToken,
-      }));
-  
-      res.status(200).json({
-        totalCustomer: totalCustomers,
-        lowerStats:{
-            QR: { totalCustomers: qrPlanCount },
-            TiffinSystem: { totalCustomers: tiffinPlanCount },
-        },
-        DeliveryPartners: deliveryPartners,
-        PlanPurchasedUser,
-      });
+        // Get all customers
+        const customers = await User.find({ role: "customer" }).select("_id name contact address fcmToken");
+        const customerIds = customers.map(user => user._id);
+
+        // Filter customers who have a valid meal plan
+        const activeCredits = await Credit.find({
+            user: { $in: customerIds },
+            mealPlan: { $ne: null },
+        }).select("user mealPlan mealPlanExpiryDate");
+        const activeCustomerIds = activeCredits.map(credit => credit.user.toString());
+
+        // Count total customers with a meal plan
+        const totalCustomers = activeCustomerIds.length;
+
+        // Get all meal plans
+        const mealPlans = await MealPlan.find().select("_id name type");
+
+        // Compute lowerStats dynamically
+        const lowerStats = {};
+        for (const plan of mealPlans) {
+            const count = await Credit.countDocuments({
+                user: { $in: activeCustomerIds },
+                mealPlan: plan._id,
+            });
+
+            lowerStats[plan.name] = {
+                type: plan.type,
+                totalCustomers: count,
+            };
+        }
+
+        // Get all delivery partners
+        const deliveryPartners = await User.find({ role: "delivery" }).select("name address");
+
+        // Get plan purchased users sorted by expiry date (ascending order)
+        const planUsers = await Credit.find({
+            user: { $in: activeCustomerIds },
+        })
+            .populate("user", "name contact fcmToken")
+            .populate("mealPlan", "name")
+            .sort({ mealPlanExpiryDate: 1 }) // Sorting by nearest expiry
+            .select("user mealPlan mealPlanExpiryDate createdAt");
+
+        const PlanPurchasedUser = planUsers.map(credit => ({
+            name: credit.user.name,
+            contact: credit.user.contact,
+            Plan: credit.mealPlan.name,
+            Date: credit.createdAt.toISOString().split("T")[0],
+            Expiry: credit.mealPlanExpiryDate.toISOString().split("T")[0],
+            fcmtoken: credit.user.fcmToken,
+        }));
+
+        res.status(200).json({
+            totalCustomer: totalCustomers,
+            lowerStats,
+            DeliveryPartners: deliveryPartners,
+            PlanPurchasedUser,
+        });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
-  };
-  
+};
 
 
-module.exports = { getDashboardData,optOutMeal,getOptOutReports,deleteOptOutById,getDeliveryDetails,closeTiffinModal,getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits };
+
+const updateAddress = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { newAddress } = req.body;
+
+        if (!userId || !newAddress) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID and new address are required.",
+            });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid User ID.",
+            });
+        }
+
+        // Find and update the user's address
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { address: newAddress },
+            { new: true, runValidators: true } // Return updated document & validate changes
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found.",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Address updated successfully.",
+            user: updatedUser, // Optionally return updated user details
+        });
+    } catch (error) {
+        console.error("Error updating address:", error);
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred while updating the address. Please try again.",
+        });
+    }
+};
+
+
+module.exports = { getDashboardData,optOutMeal,getOptOutReports,deleteOptOutById,getDeliveryDetails,closeTiffinModal,getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits,updateAddress };

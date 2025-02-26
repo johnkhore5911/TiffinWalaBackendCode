@@ -5,13 +5,15 @@ const {
   optOutMeal,getOptOutReports,deleteOptOutById,
   closeTiffinModal,
   getDeliveryDetails,
-  getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits
+  getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits,
+  updateAddress
 } = require("../controllers/userController")
 
 const { auth,isAdmin,isDeliveryBoy, isCustomer } = require("../middlewares/auth")
 
 
 router.get("/userData", auth,getUserData)
+router.post("/updateAddress", auth,updateAddress)
 router.get("/getDeliverUserData", auth,getDeliverUserData)
 router.post("/updatePlan", auth,updatePlan)
 router.get("/getAllCustomers",auth,isAdmin,getAllCustomers)
