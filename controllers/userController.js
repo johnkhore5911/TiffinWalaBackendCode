@@ -550,7 +550,7 @@ const getDeliverUserData = async (req, res) => {
                 deliveryPerson: userId, 
                 status: { $eq: "Pending" } // Ensures only "Pending" status is fetched
             })
-            .populate('customer', 'name address fcmToken') // Populate `customer` with relevant fields
+            .populate('customer', 'name address fcmToken latitude longitude') // Populate `customer` with relevant fields
             .select('status collectionStatus date customer'); // Select only required fields
 
         if (!pendingDeliveries.length) {
@@ -1151,4 +1151,35 @@ const updateAddress = async (req, res) => {
 };
 
 
-module.exports = { getDashboardData,optOutMeal,getOptOutReports,deleteOptOutById,getDeliveryDetails,closeTiffinModal,getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits,updateAddress };
+
+const updateUserLocation = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { latitude, longitude } = req.body;
+
+        // Validate inputs
+        if (!userId || latitude === undefined || longitude === undefined) {
+            return res.status(400).json({ error: 'userId, latitude, and longitude are required.' });
+        }
+
+        // Find and update the user
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { latitude, longitude },
+            { new: true } // Return the updated document
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        res.json({ message: 'Location updated successfully.', user: updatedUser });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error. Please try again later.' });
+    }
+};
+
+
+
+module.exports = { getDashboardData,optOutMeal,getOptOutReports,deleteOptOutById,getDeliveryDetails,closeTiffinModal,getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits,updateAddress,updateUserLocation };

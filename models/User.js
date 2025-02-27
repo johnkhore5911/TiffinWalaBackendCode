@@ -84,6 +84,14 @@ const UserSchema = new mongoose.Schema({
         type: [String],  // Array of strings to store the delivery IDs
         default: [],     // Default is an empty array, meaning no deliveries are pending
     },
+    latitude: {
+        type: Number,
+        default: null,
+    },
+    longitude: {
+        type: Number,
+        default: null,
+    },
     createdAt: {
         type: Date,
         default: Date.now,
