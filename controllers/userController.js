@@ -23,7 +23,7 @@ const getUserData = async (req, res) => {
         // Find the credit details for the user
         const creditDetails = await Credit.findOne({ user: userId })
             .populate("mealPlan", "name description price credits") // Populate meal plan details
-            .populate("user", "name email showTiffinModal"); // Populate user details
+            .populate("user", "name email showTiffinModal contact"); // Populate user details
 
         // If no credit details are found
         if (!creditDetails) {
@@ -39,7 +39,8 @@ const getUserData = async (req, res) => {
                 user: {
                     name: creditDetails.user.name,
                     email: creditDetails.user.email,
-                    showTiffinModal:creditDetails.user.showTiffinModal
+                    showTiffinModal:creditDetails.user.showTiffinModal,
+                    phoneNumber:creditDetails.user.contact
                 },
                 mealPlan: creditDetails.mealPlan
                     ? {
