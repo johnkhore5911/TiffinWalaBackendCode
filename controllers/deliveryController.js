@@ -253,6 +253,11 @@ const notifyCustomerTiffin = async (req, res) => {
         await user.save();
 
 
+        // **Update `deliveryUserResponse` to `true`**
+        delivery.deliveryUserResponse = true;
+        await delivery.save();  // Save the updated delivery document
+
+
         // Respond back with success
         res.status(200).json({
             success: true,
