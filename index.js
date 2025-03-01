@@ -243,10 +243,109 @@ app.post('/create-payment-intent', async (req, res) => {
 const User = require("./models/User");
 
 // const sendMealNotification = async (req, res) => {
+//   console.log("I am being called to notfiy!")
 //   const { message } = req.body;
 //   try {
-//     const users = await User.find();
+//     const users = await User.find({role: 'customer'});
 //     const tokens = users.map(user => user.fcmToken).filter(token => token);
+
+//     const payload = {
+//       notification: {
+//         title: 'Meal Notification',
+//         body: message,
+//       },
+//     };
+//     console.log("tokens: ",tokens);
+
+//     const promises = tokens.map(token => {
+//       return admin.messaging().send({
+//         token: token,
+//         notification: payload.notification,
+//       });
+//     });
+
+
+//     const responses = await Promise.all(promises);
+//     console.log('Successfully sent messages:', responses);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Notifications sent successfully!",
+//     });
+//   } catch (error) {
+//     console.error('Error sending notifications:', error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Error sending notifications",
+//     });
+//   }
+// };
+
+
+const sendMealNotification = async (req, res) => {
+  console.log("I am being called to notify!");
+  const { message } = req.body;
+  try {
+    const users = await User.find({ role: 'customer' });
+    let tokens = users.map(user => user.fcmToken).filter(token => token);
+
+    const payload = {
+      notification: {
+        title: 'Meal Notification',
+        body: message,
+      },
+    };
+    console.log("Tokens before filtering:", tokens);
+
+    const validTokens = [];
+    const promises = tokens.map(async (token) => {
+      try {
+        await admin.messaging().send({
+          token: token,
+          notification: payload.notification,
+        });
+        validTokens.push(token); // Only keep valid tokens
+      } catch (error) {
+        if (error.code === 'messaging/registration-token-not-registered') {
+          console.warn(`Invalid token removed: ${token}`);
+        } else {
+          console.error(`FCM error: ${error.message}`);
+        }
+      }
+    });
+
+    await Promise.all(promises);
+
+    console.log("Valid tokens:", validTokens);
+
+    return res.status(200).json({
+      success: true,
+      message: "Notifications sent successfully!",
+    });
+  } catch (error) {
+    console.error('Error sending notifications:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Error sending notifications",
+    });
+  }
+};
+
+
+// const sendMealNotification = async (req, res) => {
+//   const { message } = req.body;
+//   try {
+//     // Fetch only customers (excluding delivery personnel)
+//     const users = await User.find({ role: 'customer' });
+
+//     const tokens = users.map(user => user.fcmToken).filter(token => token);
+
+//     if (tokens.length === 0) {
+//       return res.status(200).json({
+//         success: true,
+//         message: "No customers found with valid FCM tokens.",
+//       });
+//     }
 
 //     const payload = {
 //       notification: {
@@ -277,51 +376,6 @@ const User = require("./models/User");
 //     });
 //   }
 // };
-
-const sendMealNotification = async (req, res) => {
-  const { message } = req.body;
-  try {
-    // Fetch only customers (excluding delivery personnel)
-    const users = await User.find({ role: 'customer' });
-
-    const tokens = users.map(user => user.fcmToken).filter(token => token);
-
-    if (tokens.length === 0) {
-      return res.status(200).json({
-        success: true,
-        message: "No customers found with valid FCM tokens.",
-      });
-    }
-
-    const payload = {
-      notification: {
-        title: 'Meal Notification',
-        body: message,
-      },
-    };
-
-    const promises = tokens.map(token => {
-      return admin.messaging().send({
-        token: token,
-        notification: payload.notification,
-      });
-    });
-
-    const responses = await Promise.all(promises);
-    console.log('Successfully sent messages:', responses);
-
-    return res.status(200).json({
-      success: true,
-      message: "Notifications sent successfully!",
-    });
-  } catch (error) {
-    console.error('Error sending notifications:', error);
-    return res.status(500).json({
-      success: false,
-      message: "Error sending notifications",
-    });
-  }
-};
 
 
 app.post('/send-meal-notification', sendMealNotification);
