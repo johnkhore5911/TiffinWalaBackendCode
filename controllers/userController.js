@@ -285,7 +285,7 @@ const getDeliverUserData = async (req, res) => {
                 status: { $eq: "Pending" } // Ensures only "Pending" status is fetched
             })
             .populate('customer', 'name address fcmToken latitude longitude') // Populate `customer` with relevant fields
-            .select('status collectionStatus date customer'); // Select only required fields
+            .select('status collectionStatus date customer deliveryUserResponse'); // Select only required fields
 
         if (!pendingDeliveries.length) {
             return res.status(200).json({

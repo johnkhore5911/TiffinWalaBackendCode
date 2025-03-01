@@ -72,6 +72,10 @@ const DeliverySchema = new mongoose.Schema({
         type: Boolean,
         default: false, // Initially, no refund has been processed
     },
+    deliveryUserResponse:{
+        type: Boolean,
+        default: false,
+    },
     responseTime: {
         type: Date,  // To track when the response was received
     },
