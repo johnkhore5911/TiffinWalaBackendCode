@@ -67,135 +67,33 @@ const getUserData = async (req, res) => {
     }
 };
 
-// const updatePlan = async (req, res) => {
-//     try {
-//         const userId = req.user?.id;
-//         const { mealPlanId } = req.body;
-//         console.log("mealPlanid: ",mealPlanId);
-//         if (!userId) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "User ID is required.",
-//             });
-//         }
 
-//         if (!mealPlanId) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Meal Plan ID is required.",
-//             });
-//         }
+const getUserMealPlan = async (req, res) => {
+    try {
+        const userId = req.user.id; 
 
-//         // Fetch credit details with populated mealPlan field
-//         const creditDetails = await Credit.findOne({ user: userId })
-//             .populate("mealPlan", "credits");
+        // Find the credit document for the given user ID
+        const credit = await Credit.findOne({ user: userId }).populate("mealPlan", "name description price credits validity");
 
-//         if (!creditDetails) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "No meal credits found for this user.",
-//             });
-//         }
+        if (!credit) {
+            return res.status(404).json({ message: "No credit record found for this user." });
+        }
 
-//         // Fetch the mealPlan details to validate
-//         const newMealPlan = await MealPlan.findById(mealPlanId);
+        // Extract meal plan details
+        const mealPlanDetails = credit.mealPlan;
+        
+        res.status(200).json({
+            userId: userId,
+            mealPlan: mealPlanDetails ? mealPlanDetails : null,
+            validity: credit.mealPlanValidity,
+            mealPlanExpiryDate: credit.mealPlanExpiryDate,
+        });
+    } catch (error) {
+        console.error("Error fetching user meal plan details:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
 
-//         if (!newMealPlan) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "Meal Plan not found.",
-//             });
-//         }
-
-//         // Update mealPlan and available credits
-//         creditDetails.mealPlan = mealPlanId;
-//         creditDetails.availableCredits += newMealPlan.credits;
-
-//         // Save the updated credit details
-//         await creditDetails.save();
-
-//         return res.status(200).json({
-//             success: true,
-//             message: "Meal Plan updated successfully.",
-//         });
-//     } catch (error) {
-//         console.error("Error updating Meal Plan:", error);
-//         return res.status(500).json({
-//             success: false,
-//             message: "An error occurred while updating the Meal Plan. Please try again.",
-//         });
-//     }
-// };
-
-
-// const updatePlan = async (req, res) => {
-//     try {
-//         const userId = req.user?.id;
-//         const { mealPlanId } = req.body;
-
-//         console.log("Request Body: ", req.body);
-
-//         if (!userId) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "User ID is required.",
-//             });
-//         }
-
-//         if (!mealPlanId) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Meal Plan ID is required.",
-//             });
-//         }
-
-//         if (!mongoose.Types.ObjectId.isValid(mealPlanId)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Invalid Meal Plan ID.",
-//             });
-//         }
-
-//         const creditDetails = await Credit.findOne({ user: userId }).populate("mealPlan", "credits");
-//         if (!creditDetails) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "No meal credits found for this user.",
-//             });
-//         }
-
-//         const newMealPlan = await MealPlan.findById(mealPlanId);
-//         if (!newMealPlan) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "Meal Plan not found.",
-//             });
-//         }
-
-//         // Update mealPlan and available credits
-//         creditDetails.mealPlan = mealPlanId;
-//         creditDetails.availableCredits += newMealPlan.credits;
-
-//         // Save the updated credit details
-//         await creditDetails.save();
-
-//         // Log and re-fetch to verify the update
-//         console.log("Updated Credit Details: ", creditDetails);
-//         const updatedCreditDetails = await Credit.findOne({ user: userId }).populate("mealPlan", "credits");
-//         console.log("Re-fetched Credit Details: ", updatedCreditDetails);
-
-//         return res.status(200).json({
-//             success: true,
-//             message: "Meal Plan updated successfully.",
-//         });
-//     } catch (error) {
-//         console.error("Error updating Meal Plan:", error);
-//         return res.status(500).json({
-//             success: false,
-//             message: "An error occurred while updating the Meal Plan. Please try again.",
-//         });
-//     }
-// };
 
 const updatePlan = async (req, res) => {
     try {
@@ -273,82 +171,6 @@ const updatePlan = async (req, res) => {
 };
 
 
-// const updatePlan = async (req, res) => {
-//     try {
-//         const userId = req.user?.id;
-//         const { mealPlanId } = req.body;
-
-//         console.log("Request Body: ", req.body);
-
-//         if (!userId) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "User ID is required.",
-//             });
-//         }
-
-//         if (!mealPlanId) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Meal Plan ID is required.",
-//             });
-//         }
-
-//         if (!mongoose.Types.ObjectId.isValid(mealPlanId)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Invalid Meal Plan ID.",
-//             });
-//         }
-
-//         const creditDetails = await Credit.findOne({ user: userId }).populate("mealPlan", "credits mealPlanValidity");
-//         if (!creditDetails) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "No meal credits found for this user.",
-//             });
-//         }
-
-//         const newMealPlan = await MealPlan.findById(mealPlanId);
-//         if (!newMealPlan) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "Meal Plan not found.",
-//             });
-//         }
-
-//         // Update mealPlan and available credits
-//         creditDetails.mealPlan = mealPlanId;
-//         creditDetails.availableCredits = newMealPlan.credits;
-
-//         // Set mealPlanValidity and calculate mealPlanExpiryDate
-//         creditDetails.mealPlanValidity = newMealPlan.validity;
-//         const expiryDate = new Date();
-//         expiryDate.setDate(expiryDate.getDate() + newMealPlan.validity);
-//         creditDetails.mealPlanExpiryDate = expiryDate;
-
-//         // Save the updated credit details
-//         await creditDetails.save();
-
-//         // Log and re-fetch to verify the update
-//         console.log("Updated Credit Details: ", creditDetails);
-//         const updatedCreditDetails = await Credit.findOne({ user: userId }).populate("mealPlan", "credits mealPlanValidity mealPlanExpiryDate");
-//         console.log("Re-fetched Credit Details: ", updatedCreditDetails);
-
-//         return res.status(200).json({
-//             success: true,
-//             message: "Meal Plan updated successfully.",
-//         });
-//     } catch (error) {
-//         console.error("Error updating Meal Plan:", error);
-//         return res.status(500).json({
-//             success: false,
-//             message: "An error occurred while updating the Meal Plan. Please try again.",
-//         });
-//     }
-// };
-
-
 
 const getAllCustomers = async (req, res) => {
     try {
@@ -405,43 +227,6 @@ const getAllCustomers = async (req, res) => {
 
 
 
-// const getTiffinSystemCustomers = async (req, res) => {
-//     try {
-//         // Step 1: Get all users with role "customer"
-//         const customers = await User.find({ role: 'customer' }).select('_id');
-
-//         if (customers.length === 0) {
-//             return res.status(404).json({ message: 'No customers found' });
-//         }
-
-//         // Step 2: Filter customers who have a Tiffin System meal plan
-//         const customerIds = customers.map(customer => customer._id);
-        
-//         // Find credits of those customers and join with MealPlan to check meal name
-//         const credits = await Credit.find({ user: { $in: customerIds } })
-//             .populate({
-//                 path: 'mealPlan',
-//                 match: { name: 'Tiffin System' }  // Only include meal plans with name 'Tiffin System'
-//             });
-
-//         // Step 3: Filter out customers who don't have 'Tiffin System' meal plan
-//         const filteredCustomers = credits
-//             .filter(credit => credit.mealPlan)  // Ensure the mealPlan exists and matches
-//             .map(credit => credit.user); // Collect user IDs who have the correct meal plan
-
-//         if (filteredCustomers.length === 0) {
-//             return res.status(404).json({ message: 'No customers found with Tiffin System meal plan' });
-//         }
-
-//         // Step 4: Retrieve complete details of customers who have Tiffin System meal plan
-//         const result = await User.find({ _id: { $in: filteredCustomers } });
-
-//         res.status(200).json({ customers: result });
-//     } catch (error) {
-//         console.error('Error fetching customers:', error);
-//         res.status(500).json({ message: 'Server error, please try again later' });
-//     }
-// };
 const getTiffinSystemCustomers = async (req, res) => {
     try {
         // Step 1: Get all users with role "customer"
@@ -487,59 +272,7 @@ const getTiffinSystemCustomers = async (req, res) => {
 };
 
 
-// const getDeliverUserData = async(req,res)=>{
-//     try{
-//         const userId = req.user.id;
-//         console.log("This is the delivery userid: ",userId);
-//         // now i want to use this userId and get all the document who has deliveryPerson is equal to the userId and then i can get all the document and in that document , there is customer that is refreing to the use model so i want the user name and the user address of user, and in this docuemnt i want the the  status collection date so write the controller 
-//         res.status(200).json({
-//             success:true,
-//             message:"Succfully send",
-//             userId
-//         });  
 
-//     }
-//     catch(error){
-//         console.error('Error fetching delivery details', error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'An error occurred while fetching delivery user details',
-//         });
-//     }
-// }
-
-
-// const getDeliverUserData = async (req, res) => {
-//     try {
-//         const userId = req.user.id; // Assuming user ID is available in `req.user`
-//         console.log("This is the delivery userId: ", userId);
-
-//         // Find all delivery documents where the deliveryPerson matches the userId
-//         const deliveries = await Delivery.find({ deliveryPerson: userId })
-//             .populate('customer', 'name address fcmToken') // Populate `customer` with `name` and `address`
-//             .select('status collectionStatus date customer'); // Select desired fields from Delivery
-
-//         if (!deliveries.length) {
-//             return res.status(201).json({
-//                 success: true,
-//                 message: "No deliveries found for the specified delivery person",
-//             });
-//         }
-
-//         // Send the response with populated data
-//         res.status(200).json({
-//             success: true,
-//             message: "Successfully fetched delivery data",
-//             deliveries,
-//         });
-//     } catch (error) {
-//         console.error("Error fetching delivery details", error);
-//         res.status(500).json({
-//             success: false,
-//             message: "An error occurred while fetching delivery user details",
-//         });
-//     }
-// };
 
 const getDeliverUserData = async (req, res) => {
     try {
@@ -601,47 +334,6 @@ const getDeliveryUsers = async (req, res) => {
 };
 
 
-// const updateDeliveryStatus = async(req,res)=>{
-//     try{
-//         const {deliveryId,status} = req.body;
-//         console.log("deliveryId: ",deliveryId);
-//         console.log("status: ",status);
-//         if(!deliveryId && !status){
-//             return res.status(500).json({
-//                 success: false,
-//                 message: 'All fields are required!',
-//             });
-//         }
-//         const delivery = await Delivery.findById(deliveryId);
-//         delivery.status = status;
-//         delivery.save();
-
-//         const user = await User.findById(delivery.deliveryPerson);
-//         console.log("user mil gya:",user);
-//         if(!user){
-//             return res.status(404).json({
-//                 success:false,
-//                 message:"user not found"
-//             })
-//         }
-//         user.showTiffinModal =false;
-//         await user.save();
-        
-
-//         res.status(200).json({
-//             success:true,
-//             message:"Status updated Successfully!"
-//         })
-
-//     }
-//     catch(error){
-//         console.error('Error while updating the delivery Status:', error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'An error occurred while updating the delivery Status',
-//         });
-//     }
-// }
 
 
 const updateDeliveryStatus = async (req, res) => {
@@ -686,63 +378,6 @@ const updateDeliveryStatus = async (req, res) => {
 };
 
 
-
-// const updateDeliveryStatus = async (req, res) => {
-//     try {
-//         const { deliveryId, status } = req.body;
-//         console.log("deliveryId: ", deliveryId);
-//         console.log("status: ", status);
-
-//         // Check if both deliveryId and status are provided
-//         if (!deliveryId || !status) {
-//             return res.status(500).json({
-//                 success: false,
-//                 message: 'All fields are required!',
-//             });
-//         }
-
-//         // Find the delivery object
-//         const delivery = await Delivery.findById(deliveryId);
-//         if (!delivery) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: 'Delivery not found!',
-//             });
-//         }
-
-//         // Update the delivery status
-//         delivery.status = status;
-//         await delivery.save();  // Make sure to await the save operation here
-
-//         // Find the user associated with the delivery
-//         const user = await User.findById(delivery.deliveryPerson);
-//         console.log("user mil gya:", user);
-
-//         if (!user) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: 'User not found',
-//             });
-//         }
-
-//         // Update the user's showTiffinModal to false
-//         user.showTiffinModal = false;
-//         await user.save();  // Await the save operation to ensure it's updated
-
-//         // Send a successful response
-//         res.status(200).json({
-//             success: true,
-//             message: "Status updated successfully!",
-//         });
-
-//     } catch (error) {
-//         console.error('Error while updating the delivery Status:', error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'An error occurred while updating the delivery Status',
-//         });
-//     }
-// };
 
 
 
@@ -806,45 +441,6 @@ const refundCredits = async(req,res)=>{
     }
 }
 
-
-// const closeTiffinModal = async (req, res) => {
-//     try {
-//         const userId = req.user.id;  // Assuming userId is available in the request object
-//         const deliveryId= req.body;
-//         console.log("USERId: ", userId);
-//         console.log("deliveryId: ", deliveryId);
-
-//         // Find the user by their ID
-//         const user = await User.findById(userId);
-        
-//         // Check if the user exists
-//         if (!user) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: 'User not found',
-//             });
-//         }
-
-//         // Update the showTiffinModal field to false
-//         user.showTiffinModal = false;
-        
-//         // Save the updated user document
-//         await user.save();
-
-//         // Send a successful response
-//         return res.status(200).json({
-//             success: true,
-//             message: 'Tiffin modal closed successfully!',
-//         });
-
-//     } catch (error) {
-//         console.error('Error occurred while updating closeTiffinModal:', error);
-//         return res.status(500).json({
-//             success: false,
-//             message: 'Error occurred while updating the closeTiffinModal',
-//         });
-//     }
-// };
 
 
 const closeTiffinModal = async (req, res) => {
@@ -972,69 +568,6 @@ const deleteOptOutById = async (req, res) => {
 };
 
 
-// const getDashboardData = async (req, res) => {
-//     try {
-//       // Get all customers
-//       const customers = await User.find({ role: "customer" }).select("_id name contact address fcmToken");
-//       const customerIds = customers.map(user => user._id);
-  
-//       // Filter customers who have a valid meal plan
-//       const activeCredits = await Credit.find({
-//         user: { $in: customerIds },
-//         mealPlan: { $ne: null },
-//       }).select("user mealPlan mealPlanExpiryDate");
-//       const activeCustomerIds = activeCredits.map(credit => credit.user.toString());
-  
-//       // Count total customers with a meal plan
-//       const totalCustomers = activeCustomerIds.length;
-  
-//       // Count customers in QR and Tiffin System plans
-//       const qrPlanCount = await Credit.countDocuments({
-//         user: { $in: activeCustomerIds },
-//         mealPlan: await MealPlan.findOne({ name: "QR" }).select("_id"),
-//       });
-  
-//       const tiffinPlanCount = await Credit.countDocuments({
-//         user: { $in: activeCustomerIds },
-//         mealPlan: await MealPlan.findOne({ name: "Tiffin System" }).select("_id"),
-//       });
-  
-//       // Get all delivery partners
-//       const deliveryPartners = await User.find({ role: "delivery" }).select("name address");
-  
-//       // Get plan purchased users sorted by expiry date (ascending order)
-//       const planUsers = await Credit.find({
-//         user: { $in: activeCustomerIds },
-//       })
-//         .populate("user", "name contact fcmToken")
-//         .populate("mealPlan", "name")
-//         .sort({ mealPlanExpiryDate: 1 }) // Sorting by nearest expiry
-//         .select("user mealPlan mealPlanExpiryDate createdAt");
-  
-//       const PlanPurchasedUser = planUsers.map(credit => ({
-//         name: credit.user.name,
-//         contact: credit.user.contact,
-//         Plan: credit.mealPlan.name,
-//         Date: credit.createdAt.toISOString().split("T")[0],
-//         Expiry: credit.mealPlanExpiryDate.toISOString().split("T")[0],
-//         fcmtoken: credit.user.fcmToken,
-//       }));
-  
-//       res.status(200).json({
-//         totalCustomer: totalCustomers,
-//         lowerStats:{
-//             QR: { totalCustomers: qrPlanCount },
-//             TiffinSystem: { totalCustomers: tiffinPlanCount },
-//         },
-//         DeliveryPartners: deliveryPartners,
-//         PlanPurchasedUser,
-//       });
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({ message: "Internal Server Error" });
-//     }
-//   };
-  
 
 const getDashboardData = async (req, res) => {
     try {
@@ -1183,4 +716,4 @@ const updateUserLocation = async (req, res) => {
 
 
 
-module.exports = { getDashboardData,optOutMeal,getOptOutReports,deleteOptOutById,getDeliveryDetails,closeTiffinModal,getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits,updateAddress,updateUserLocation };
+module.exports = { getUserMealPlan,getDashboardData,optOutMeal,getOptOutReports,deleteOptOutById,getDeliveryDetails,closeTiffinModal,getUserData,updatePlan,getAllCustomers,getTiffinSystemCustomers,getDeliveryUsers,getDeliverUserData,updateDeliveryStatus,refundCredits,updateAddress,updateUserLocation };

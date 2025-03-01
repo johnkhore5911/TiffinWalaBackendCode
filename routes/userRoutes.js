@@ -1,7 +1,7 @@
 const express = require("express")
 const router = express.Router()
 const {
-  getDashboardData,
+  getDashboardData,getUserMealPlan,
   optOutMeal,getOptOutReports,deleteOptOutById,
   closeTiffinModal,
   getDeliveryDetails,
@@ -13,6 +13,7 @@ const { auth,isAdmin,isDeliveryBoy, isCustomer } = require("../middlewares/auth"
 
 
 router.get("/userData", auth,getUserData)
+router.get("/userDataMealPlan", auth,getUserMealPlan)
 router.post("/updateAddress", auth,updateAddress)
 router.post("/updateUserLocation", auth,updateUserLocation)
 router.get("/getDeliverUserData", auth,getDeliverUserData)
