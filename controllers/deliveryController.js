@@ -336,8 +336,8 @@ const adminReportMissedTiffins = async(req,res)=>{
             { status: 'Missed' },
             { collectionStatus: 'Not Found' }
         ] })
-            .populate('customer', 'name email')  // Optionally populate customer details
-            .populate('deliveryPerson', 'name email'); // Optionally populate deliveryPerson details
+            .populate('customer', 'name contact')  // Optionally populate customer details
+            .populate('deliveryPerson', 'name contact'); // Optionally populate deliveryPerson details
         
         // Check if there are any missed deliveries
         if (missedDeliveries.length === 0) {
