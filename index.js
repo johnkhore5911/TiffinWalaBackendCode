@@ -242,11 +242,56 @@ app.post('/create-payment-intent', async (req, res) => {
 // Notification Endpoint
 const User = require("./models/User");
 
+// const sendMealNotification = async (req, res) => {
+//   const { message } = req.body;
+//   try {
+//     const users = await User.find();
+//     const tokens = users.map(user => user.fcmToken).filter(token => token);
+
+//     const payload = {
+//       notification: {
+//         title: 'Meal Notification',
+//         body: message,
+//       },
+//     };
+
+//     const promises = tokens.map(token => {
+//       return admin.messaging().send({
+//         token: token,
+//         notification: payload.notification,
+//       });
+//     });
+
+//     const responses = await Promise.all(promises);
+//     console.log('Successfully sent messages:', responses);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Notifications sent successfully!",
+//     });
+//   } catch (error) {
+//     console.error('Error sending notifications:', error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Error sending notifications",
+//     });
+//   }
+// };
+
 const sendMealNotification = async (req, res) => {
   const { message } = req.body;
   try {
-    const users = await User.find();
+    // Fetch only customers (excluding delivery personnel)
+    const users = await User.find({ role: 'customer' });
+
     const tokens = users.map(user => user.fcmToken).filter(token => token);
+
+    if (tokens.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No customers found with valid FCM tokens.",
+      });
+    }
 
     const payload = {
       notification: {
@@ -277,6 +322,7 @@ const sendMealNotification = async (req, res) => {
     });
   }
 };
+
 
 app.post('/send-meal-notification', sendMealNotification);
 
