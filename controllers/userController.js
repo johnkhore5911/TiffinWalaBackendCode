@@ -279,18 +279,31 @@ const getDeliverUserData = async (req, res) => {
         const userId = req.user.id; // Assuming user ID is available in `req.user`
         console.log("Fetching deliveries with 'Pending' status for userId:", userId);
 
+
+        const user = await User.findById(userId).select('name email contact');
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
         // Find deliveries where deliveryPerson matches userId and status is "Pending"
         const pendingDeliveries = await Delivery.find({ 
                 deliveryPerson: userId, 
-                status: { $eq: "Pending" } // Ensures only "Pending" status is fetched
+                // status: { $eq: "Pending" } // Ensures only "Pending" status is fetched
             })
-            .populate('customer', 'name address fcmToken latitude longitude') // Populate `customer` with relevant fields
+            .populate('customer', 'name address fcmToken latitude longitude contact') // Populate `customer` with relevant fields
             .select('status collectionStatus date customer deliveryUserResponse'); // Select only required fields
 
         if (!pendingDeliveries.length) {
             return res.status(200).json({
                 success: true,
                 message: "No pending deliveries found for the specified delivery person",
+                user: {
+                    name: user.name,
+                    contact: user.contact,
+                }
             });
         }
 
@@ -299,6 +312,10 @@ const getDeliverUserData = async (req, res) => {
             success: true,
             message: "Successfully fetched pending deliveries",
             deliveries: pendingDeliveries,
+            user: {
+                name: user.name,
+                contact: user.contact,
+            }
         });
     } catch (error) {
         console.error("Error fetching pending deliveries:", error);
@@ -308,6 +325,10 @@ const getDeliverUserData = async (req, res) => {
         });
     }
 };
+
+
+
+
 
 
 
@@ -489,7 +510,7 @@ const getDeliveryDetails = async (req, res) => {
     try {
       // Fetch the delivery details along with delivery person details
       const delivery = await Delivery.findById(deliveryId)
-        .populate('deliveryPerson', 'name') // Populate deliveryPerson field to fetch their name
+        .populate('deliveryPerson', 'name contact') // Populate deliveryPerson field to fetch their name
         .exec();
   
       if (!delivery) {
@@ -499,6 +520,7 @@ const getDeliveryDetails = async (req, res) => {
       // Prepare the response data
       const response = {
         deliveryPersonName: delivery.deliveryPerson ? delivery.deliveryPerson.name : 'Not Assigned',
+        deliveryPersonContact: delivery.deliveryPerson ? delivery.deliveryPerson.contact : 'Not Available',
         timeOfDelivery: delivery.date || 'NAN',
       };
   
