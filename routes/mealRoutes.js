@@ -4,9 +4,9 @@ const { auth, isAdmin } = require("../middlewares/auth");
 
 const router = express.Router();
 
-router.post("/add-meal", createMeal);
-router.delete("/delete-meal/:id", deleteMeal);
-router.get("/get-meals", getAllMeal);
+router.post("/add-meal",auth,isAdmin, createMeal);
+router.delete("/delete-meal/:id",auth,isAdmin, deleteMeal);
+router.get("/get-meals",auth, getAllMeal);
 
 
 module.exports = router;
