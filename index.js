@@ -189,6 +189,8 @@ const userRoutes = require("./routes/userRoutes");
 const deliveryRoutes = require("./routes/deliveryRoutes");
 const paymentRoutes = require("./routes/paymentRoute");
 const billRoutes = require("./routes/billRoutes");
+const employeeRoutes = require("./routes/employeeRoute");
+const attendanceRoutes = require("./routes/attandanceRoutes");
 
 
 // Use Routes
@@ -199,6 +201,8 @@ app.use("/api/userRoutes", userRoutes);
 app.use("/api/deliveryRoutes", deliveryRoutes);
 app.use("/api/billRoutes", billRoutes);
 
+app.use("/api/employees", employeeRoutes);
+app.use("/api/attendance", attendanceRoutes);
 //payment
 app.use("/api/payments", paymentRoutes);
 
