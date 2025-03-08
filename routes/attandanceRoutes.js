@@ -13,9 +13,9 @@ const { auth, isAdmin } = require("../middlewares/auth");
 // router.get("/:employeeId", auth, getEmployeeAttendance);
 
 // router.post("/XYZ", markAttendance);
-router.post("/", markAttendance);
-router.get("/monthly", getMonthlyAttendance);
-router.get("/:employeeId", getEmployeeAttendance);
+router.post("/",auth,isAdmin, markAttendance);
+router.get("/monthly", auth,isAdmin,getMonthlyAttendance);
+router.get("/:employeeId",auth,isAdmin, getEmployeeAttendance);
 
 
 module.exports = router;

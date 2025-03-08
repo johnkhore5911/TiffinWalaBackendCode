@@ -12,9 +12,9 @@ const { auth, isAdmin } = require("../middlewares/auth");
 // router.get("/", auth, getEmployees);
 // router.delete("/:id", auth, isAdmin, deleteEmployee);
 
-router.post("/", addEmployee);
-router.get("/", getEmployees);
-router.delete("/:id", deleteEmployee);
+router.post("/",auth,isAdmin, addEmployee);
+router.get("/",auth,isAdmin, getEmployees);
+router.delete("/:id",auth,isAdmin, deleteEmployee);
 
 
 module.exports = router;
