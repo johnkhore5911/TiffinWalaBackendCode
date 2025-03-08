@@ -227,6 +227,51 @@ const getAllCustomers = async (req, res) => {
 
 
 
+// const getTiffinSystemCustomers = async (req, res) => {
+//     try {
+//         // Step 1: Get all users with role "customer"
+//         const customers = await User.find({ role: 'customer' }).select('_id');
+
+//         if (customers.length === 0) {
+//             return res.status(404).json({ message: 'No customers found' });
+//         }
+
+//         // Step 2: Filter customers who have a Tiffin System meal plan
+//         const customerIds = customers.map(customer => customer._id);
+        
+//         // Find credits of those customers and join with MealPlan to check meal name
+//         const credits = await Credit.find({ user: { $in: customerIds } })
+//             .populate({
+//                 path: 'mealPlan',
+//                 match: { type: 'Tiffin System' }  // Only include meal plans with name 'Tiffin System'
+//             });
+
+//         // Step 3: Filter out customers who don't have 'Tiffin System' meal plan
+//         const filteredCredits = credits.filter(credit => credit.mealPlan  && credit.availableCredits >= 1); // Ensure the mealPlan exists and matches
+
+//         if (filteredCredits.length === 0) {
+//             return res.status(404).json({ message: 'No customers found with Tiffin System meal plan' });
+//         }
+
+//         // Step 4: Retrieve complete details of customers and include remaining credits
+//         const result = await Promise.all(
+//             filteredCredits.map(async (credit) => {
+//                 const user = await User.findById(credit.user); // Get the user details
+//                 return {
+//                     ...user.toObject(), // Convert Mongoose document to plain object
+//                     remainingCredits: credit.availableCredits, // Add remaining credits
+//                 };
+//             })
+//         );
+
+//         res.status(200).json({ customers: result });
+//     } catch (error) {
+//         console.error('Error fetching customers:', error);
+//         res.status(500).json({ message: 'Server error, please try again later' });
+//     }
+// };
+
+
 const getTiffinSystemCustomers = async (req, res) => {
     try {
         // Step 1: Get all users with role "customer"
@@ -239,18 +284,20 @@ const getTiffinSystemCustomers = async (req, res) => {
         // Step 2: Filter customers who have a Tiffin System meal plan
         const customerIds = customers.map(customer => customer._id);
         
-        // Find credits of those customers and join with MealPlan to check meal name
-        const credits = await Credit.find({ user: { $in: customerIds } })
-            .populate({
-                path: 'mealPlan',
-                match: { type: 'Tiffin System' }  // Only include meal plans with name 'Tiffin System'
-            });
+        // Find credits of those customers and join with MealPlan to check meal name and validity
+        const credits = await Credit.find({ 
+            user: { $in: customerIds }, 
+            mealPlanExpiryDate: { $gte: new Date() } // Ensure plan is still valid
+        }).populate({
+            path: 'mealPlan',
+            match: { type: 'Tiffin System' }  // Only include meal plans with name 'Tiffin System'
+        });
 
         // Step 3: Filter out customers who don't have 'Tiffin System' meal plan
-        const filteredCredits = credits.filter(credit => credit.mealPlan  && credit.availableCredits >= 1); // Ensure the mealPlan exists and matches
+        const filteredCredits = credits.filter(credit => credit.mealPlan && credit.availableCredits >= 1);
 
         if (filteredCredits.length === 0) {
-            return res.status(404).json({ message: 'No customers found with Tiffin System meal plan' });
+            return res.status(404).json({ message: 'No customers found with valid Tiffin System meal plan' });
         }
 
         // Step 4: Retrieve complete details of customers and include remaining credits
@@ -260,6 +307,7 @@ const getTiffinSystemCustomers = async (req, res) => {
                 return {
                     ...user.toObject(), // Convert Mongoose document to plain object
                     remainingCredits: credit.availableCredits, // Add remaining credits
+                    mealPlanExpiryDate: credit.mealPlanExpiryDate, // Include expiry date
                 };
             })
         );
@@ -270,7 +318,6 @@ const getTiffinSystemCustomers = async (req, res) => {
         res.status(500).json({ message: 'Server error, please try again later' });
     }
 };
-
 
 
 
